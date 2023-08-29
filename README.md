@@ -1,6 +1,6 @@
 # Node.js Fortuna Miner
 
-This is a modified [Fortuna](https://github.com/aiken-lang/fortuna) that uses Node.js instead of Deno to take advantage of multithreading / web workers. Node.js is the best solution until we can get Lucid working from within Deno workers.
+This is a modified [Fortuna](https://github.com/aiken-lang/fortuna) miner that uses Node.js instead of Deno to take advantage of multithreading / web workers. Node.js is the best solution until we can get Lucid working from within Deno workers.
 
 This app requires you to have node v16+ and npm installed.
 
