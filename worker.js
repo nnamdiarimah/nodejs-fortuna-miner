@@ -57,8 +57,8 @@ parentPort.on('message', async function (e) {
         let timer = new Date().valueOf();
 
         while (true) {
-            if (new Date().valueOf() - timer > 10000) {
-                parentPort.postMessage("New block not found in 10 seconds, updating state");
+            if (new Date().valueOf() - timer > 5000) {
+                parentPort.postMessage("New block not found in 5 seconds, updating state");
                 timer = new Date().valueOf();
                 try {
                     validatorUTXOs = await lucid.utxosAt(validatorAddress);
@@ -72,28 +72,30 @@ parentPort.on('message', async function (e) {
                     (u) => u.assets[validatorHash + fromText("lord tuna")],
                 );
 
-                validatorState = validatorOutRef.datum;
+                if (validatorState !== validatorOutRef.datum) {
+                    validatorState = validatorOutRef.datum;
 
-                state = Data.from(validatorState);
+                    state = Data.from(validatorState);
 
-                nonce = new Uint8Array(16);
+                    nonce = new Uint8Array(16);
 
-                crypto.getRandomValues(nonce);
+                    crypto.getRandomValues(nonce);
 
-                targetState = new Constr(0, [
-                    // nonce: ByteArray
-                    toHex(nonce),
-                    // block_number: Int
-                    state.fields[0],
-                    // current_hash: ByteArray
-                    state.fields[1],
-                    // leading_zeros: Int
-                    state.fields[2],
-                    // difficulty_number: Int
-                    state.fields[3],
-                    //epoch_time: Int
-                    state.fields[4],
-                ]);
+                    targetState = new Constr(0, [
+                        // nonce: ByteArray
+                        toHex(nonce),
+                        // block_number: Int
+                        state.fields[0],
+                        // current_hash: ByteArray
+                        state.fields[1],
+                        // leading_zeros: Int
+                        state.fields[2],
+                        // difficulty_number: Int
+                        state.fields[3],
+                        //epoch_time: Int
+                        state.fields[4],
+                    ]);
+                }
             }
 
             targetHash = sha256(sha256(fromHex(Data.to(targetState))));
@@ -202,6 +204,7 @@ parentPort.on('message', async function (e) {
             // // await lucid.awaitTx(signed.toHash());
             await delay(5000);
         } catch (e) {
+            parentPort.postMessage("Nevermind LOL");
             console.error(e);
         }
     }
