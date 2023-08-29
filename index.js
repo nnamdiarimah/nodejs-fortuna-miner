@@ -1,8 +1,12 @@
-const {Kupmios} = require("lucid-cardano");
-const fs = require('fs').promises;
+import {Kupmios} from "lucid-cardano";
+import { promises as fs} from 'fs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 (async () => {
     // Multi-threaded Fortuna mining script
+    const kupoUrl = process.env.KUPO_URL;
+    const ogmiosUrl = process.env.OGMIOS_URL;
     const genesisFile = await readFile("./genesis/mainnet.json");
 
     const {validatorHash, validatorAddress} = JSON
