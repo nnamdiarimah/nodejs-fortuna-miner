@@ -14,9 +14,9 @@ This app requires you to have node v16+ and npm installed.
 
 ## Disclaimers 🚨
 - **Strongly recommend using your own Ogmios and Kupo instances**
-  - Each worker mines in isolation. If your device has 8 cpu cores, it will likely send 16 (`8 cores x 2 threads`) requests to Kupo every 5 seconds, minimum.
+  - Each worker currently mines in isolation. As a result, the number of requests to your endpoint are multiplied by the number of CPU cores / threads. **If you're using demeter.run for your Kupo endpoint, they mey temporarily block you for making too many requests.**
 - Monitor your CPU temp (See images below).
-- You don't have to follow these to get it running ([learn more](https://twitter.com/rogerskaer/status/1576025818182332416)).
+- You don't have to follow the disclaimers to get it running ([learn more](https://twitter.com/rogerskaer/status/1576025818182332416)).
 
 ## Performance comparison
 **Original fortuna miner (single thread)**
