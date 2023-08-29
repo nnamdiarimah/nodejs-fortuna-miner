@@ -20,8 +20,9 @@ This app requires you to have node v16+ and npm installed.
 
 ## Performance comparison
 **Original fortuna miner (single thread)**
-<img width="1580" alt="Screenshot 2023-08-29 at 12 46 18 PM" src="https://github.com/nnamdiarimah/nodejs-fortuna-miner/assets/10407499/d73d1e22-0d46-4b10-807e-f096623af3c1">
+<img width="1580" alt="Screenshot 2023-08-29 at 12 46 18 PM" src="https://github.com/nnamdiarimah/nodejs-fortuna-miner/assets/10407499/7e9a9680-9a5b-47d6-9e26-3e92eb8ebcd6">
 
 **Node.js fortuna miner (multi-threaded)**
+<img width="1580" alt="Screenshot 2023-08-29 at 12 36 05 PM" src="https://github.com/nnamdiarimah/nodejs-fortuna-miner/assets/10407499/c8591aa4-7a99-433d-a1be-15bb5bf62ac0">
 
-<img width="1580" alt="Screenshot 2023-08-29 at 12 36 05 PM" src="https://github.com/nnamdiarimah/nodejs-fortuna-miner/assets/10407499/4ad43376-1ded-4e62-8b0c-160eb2c26ed9">
+
