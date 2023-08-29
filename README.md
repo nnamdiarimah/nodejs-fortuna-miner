@@ -2,13 +2,21 @@
 
 This is a modified [Fortuna](https://github.com/aiken-lang/fortuna) that uses Node.js instead of Deno to take advantage of multithreading / web workers. Node.js is the best solution until we can get Lucid working from within Deno workers.
 
+This app requires you to have node v16+ and npm installed.
+
 ## Setup
-Create `.env with (KUPO_URL, OGMIOS_URL)` and `seed.txt` files in the project root, similar to the setup for the [original miner](https://github.com/aiken-lang/fortuna).
+- `npm install` 
+- Create `.env with (KUPO_URL, OGMIOS_URL)` and `seed.txt` files in the project root, similar to the setup for the [original miner](https://github.com/aiken-lang/fortuna).
+
+## Running
+`npm start` or `node index.js`
+
 
 ## Disclaimers 🚨
 - **Strongly recommend using your own Ogmios and Kupo instances**
-  - Each worker mines in isolation. If your device has 8 cpu cores, it will likely send 16 (`8 cores x 2 threas`) requests to Kupo every 5 seconds, minimum.
-- Monitor your CPU temp ([learn more](https://twitter.com/rogerskaer/status/1576025818182332416))
+  - Each worker mines in isolation. If your device has 8 cpu cores, it will likely send 16 (`8 cores x 2 threads`) requests to Kupo every 5 seconds, minimum.
+- Monitor your CPU temp (See images below).
+- You don't have to follow these to get it running ([learn more](https://twitter.com/rogerskaer/status/1576025818182332416)).
 
 ## Performance comparison
 **Original fortuna miner (single thread)**
