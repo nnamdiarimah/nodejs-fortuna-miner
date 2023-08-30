@@ -3,6 +3,7 @@ import {fromHex, toHex,} from 'lucid-cardano';
 
 import blueprint from "./plutus.json" assert {type: "json"};
 import * as cbor from "cbor";
+import {promises as fs} from "fs";
 
 const MAX_TX_EX_STEPS = 10000000000;
 const MAX_TX_EX_MEM = 14000000;
@@ -225,4 +226,12 @@ export function calculateInterlink(
   }
 
   return interlink;
+}
+
+export async function readFile(filename) {
+  try {
+    return await fs.readFile(filename, 'utf8');
+  } catch (err) {
+    console.error('Error reading the file:', err);
+  }
 }

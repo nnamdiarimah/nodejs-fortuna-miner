@@ -5,9 +5,10 @@ import {
     calculateInterlink,
     getDifficulty,
     getDifficultyAdjustement,
-    incrementU8Array
+    incrementU8Array, readFile
 } from "./utils.js";
 import {promises as fs} from "fs";
+import 'colors';
 
 parentPort.on('message', async function (e) {
     const {validatorHash, validatorAddress, kupoUrl, ogmiosUrl} = e;
@@ -63,8 +64,8 @@ parentPort.on('message', async function (e) {
                 try {
                     validatorUTXOs = await lucid.utxosAt(validatorAddress);
                 } catch (e) {
-                    parentPort.postMessage(e);
-                    parentPort.postMessage("Error occurred while fetching utxos, continuing...");
+                    parentPort.postMessage(e.message?.yellow);
+                    parentPort.postMessage("Error occurred while fetching utxos, skipping...".yellow);
                     continue;
                 }
 
@@ -167,7 +168,7 @@ parentPort.on('message', async function (e) {
 
         const outDat = Data.to(postDatum);
 
-        parentPort.postMessage(`Found next datum: ${outDat}`);
+        parentPort.postMessage(`Found next datum: ${outDat}`.green);
 
         const mintTokens = {[validatorHash + fromText("TUNA")]: 5000000000n};
         const masterToken = {[validatorHash + fromText("lord tuna")]: 1n};
@@ -197,26 +198,26 @@ parentPort.on('message', async function (e) {
             const signed = await txMine.sign().complete();
 
             await signed.submit();
+            const txHash = signed.toHash()
 
-            parentPort.postMessage(`TX HASH: ${signed.toHash()}`);
-            parentPort.postMessage("Waiting for confirmation...");
+            parentPort.postMessage(`TX HASH: ${txHash}`.green);
+            parentPort.postMessage("Waiting for confirmation...".green);
 
-            // // await lucid.awaitTx(signed.toHash());
+            lucid.awaitTx(signed.toHash())
+                .then(() => {
+                    parentPort.postMessage(`TX confirmed: https://cardanoscan.io/transaction/${txHash}`.green);
+                })
+                .catch((e) => {
+                   parentPort.postMessage(`TX failed to make it on chain`.yellow);
+                   parentPort.postMessage(e.message?.yellow);
+                });
             await delay(5000);
         } catch (e) {
-            parentPort.postMessage("Nevermind LOL");
-            console.error(e);
+            parentPort.postMessage("Nevermind LOL".red);
+            parentPort.postMessage(e.message?.red);
         }
     }
 });
-
-async function readFile(filename) {
-    try {
-        return await fs.readFile(filename, 'utf8');
-    } catch (err) {
-        console.error('Error reading the file:', err);
-    }
-}
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
