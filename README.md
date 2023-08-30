@@ -11,7 +11,7 @@ This is a modified [Fortuna](https://github.com/aiken-lang/fortuna) miner that u
 
 ### Disclaimers 🚨
 - **Strongly recommend using your own Ogmios and Kupo instances**
-  - Each worker currently mines in isolation. As a result, the number of requests to your endpoint are multiplied by the number of CPU cores / threads. **If you're using demeter.run for your Kupo endpoint, they mey temporarily block you for making too many requests.**
+  - Each worker currently mines in isolation. As a result, the number of requests to your endpoint are multiplied by the number of CPU cores / threads. **If you're using demeter.run for your Kupo endpoint, access may be temporarily limited for making too many requests (standard DDOS protection).** We're currently working on some improvements to fix this issue.
 - Monitor your CPU temp.
 - You don't have to follow the disclaimers to get it running ([learn more](https://twitter.com/rogerskaer/status/1576025818182332416)).
 
