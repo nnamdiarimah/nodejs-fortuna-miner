@@ -79,7 +79,7 @@ function refreshData(e) {
 }
 
 async function waitForData() {
-    logWarning("Worker waiting for state to start...");
+    log("Worker waiting for state to start...");
 
     while(true) {
         if (data) {
