@@ -17,7 +17,9 @@ dotenv.config();
     // Multi-threaded Fortuna mining script
     const kupoUrl = process.env.KUPO_URL;
     const ogmiosUrl = process.env.OGMIOS_URL;
-    const genesisFile = await readFile("./genesis/mainnet.json");
+    const isPreview = process.argv.includes("--preview");
+
+    const genesisFile = await readFile(`./genesis/${isPreview ? 'preview' : 'mainnet'}.json`);
 
     const {validatorHash, validatorAddress} = JSON
         .parse(
@@ -26,12 +28,14 @@ dotenv.config();
 
     console.log("Starting");
 
+    console.log(validatorAddress)
+
     const provider = new Kupmios(kupoUrl, ogmiosUrl);
-    const lucid = await Lucid.new(provider, "Mainnet");
+    const lucid = await Lucid.new(provider, isPreview ? "Preview" : "Mainnet");
 
     lucid.selectWalletFromSeed(await readFile("seed.txt"));
 
-    const cpuCoreCount = os.cpus().length - 2;
+    const cpuCoreCount = 1; // os.cpus().length - 2;
     let workers = [];
     for (let i = 0; i < cpuCoreCount; i++) {
         workers.push(
@@ -103,6 +107,8 @@ dotenv.config();
                 //epoch_time: Int
                 minerState.fields[4],
             ]);
+
+            // console.log("Sending new state to worker ", targetState);
 
             // targetState = Data.to(targetState);
 

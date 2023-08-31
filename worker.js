@@ -17,20 +17,25 @@ await waitForData();
 let {
     state,
     targetState,
+    nonce,
 } = data;
 let targetHash;
 let difficulty;
-let nonce = new Uint8Array(16);
 
 let timer = new Date().valueOf();
-
+let cborTargetState = Data.to(targetState);
+let iterations = 0;
 while(true) {
     if (new Date().valueOf() - timer > 5000) {
-        timer = new Date().valueOf();
+        console.log('iterations', iterations)
         await delay(100)
+        timer = new Date().valueOf();
+        iterations = 0;
+
     }
 
-    targetHash = sha256(sha256(fromHex(Data.to(targetState)))); // todo
+    // targetHash = sha256(sha256(fromHex(Data.to(targetState)))); // todo
+    targetHash = sha256(sha256(fromHex(cborTargetState))); // todo
     difficulty = getDifficulty(targetHash);
     const { leadingZeros, difficulty_number } = difficulty;
 
@@ -42,9 +47,22 @@ while(true) {
         logWarning("Found next datum");
         foundNextDatum();
     }
+    // console.log('before increment', targetState)
+    // const beforeCbor = Data.to(targetState);
     // else failed to find the right datum
     incrementU8Array(nonce); // todo increment directly on targetState buffer
-    targetState.fields[0] = toHex(nonce);
+    // targetState.fields[0] = toHex(nonce);
+    // console.log('after increment', targetState)
+    // const afterCbor = Data.to(targetState);
+    // console.log('beforeCbor', beforeCbor)
+    // console.log('afterCbor', afterCbor)
+    // new solution
+    // break;
+    //
+    cborTargetState = replaceMiddle(cborTargetState, 8, 40, toHex(nonce));
+    // console.log('cborTargetState', cborTargetState)
+    // await delay(1000)
+    iterations++;
 }
 
 function log(message) {
@@ -69,6 +87,7 @@ function refreshData(e) {
     log("State updated");
     data = e;
     data.targetState = rehydrateConstr(data.targetState);
+    // console.log('recieved data', data)
 }
 
 async function waitForData() {
@@ -86,4 +105,8 @@ async function waitForData() {
 
 function rehydrateConstr(constr) {
     return new Constr(constr.index, constr.fields);
+}
+
+function replaceMiddle(original, start, end, replacement) {
+    return original.substring(0, start) + replacement + original.substring(end);
 }
