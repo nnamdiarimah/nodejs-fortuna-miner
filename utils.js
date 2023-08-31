@@ -1,9 +1,9 @@
 import * as colors from "colors";
-import {fromHex, toHex,} from 'lucid-cardano';
+import { fromHex, toHex } from "lucid-cardano";
 
-import blueprint from "./plutus.json" assert {type: "json"};
+import blueprint from "./plutus.json" assert { type: "json" };
 import * as cbor from "cbor";
-import {promises as fs} from "fs";
+import { promises as fs } from "fs";
 
 const MAX_TX_EX_STEPS = 10000000000;
 const MAX_TX_EX_MEM = 14000000;
@@ -39,28 +39,28 @@ export function printExecutionDetails(tx, name) {
   ${colors.bold(colors.brightMagenta(name))} - ${colors.green("passed")}
   
     ${colors.bold(colors.blue("mem"))}:       ${
-    colors.brightGreen(mem.toString())
+      colors.brightGreen(mem.toString())
   }
     ${colors.bold(colors.blue("remaining"))}: ${
-    colors.brightCyan(remainingMem.toString())
+      colors.brightCyan(remainingMem.toString())
   }
     
     ${colors.bold(colors.blue("cpu"))}:       ${
-    colors.brightGreen(steps.toString())
+      colors.brightGreen(steps.toString())
   }
     ${colors.bold(colors.blue("remaining"))}: ${
-    colors.brightCyan(remainingSteps.toString())
+      colors.brightCyan(remainingSteps.toString())
   }
     
     ${colors.bold(colors.blue("tx size"))}:   ${
-    colors.brightGreen(txBytes.toString())
+      colors.brightGreen(txBytes.toString())
   }
     ${colors.bold(colors.blue("remaining"))}: ${
-    colors.brightCyan(remainingTxBytes.toString())
+      colors.brightCyan(remainingTxBytes.toString())
   }
     
     ${colors.bold(colors.blue("fee"))}: ${
-    colors.brightGreen(fee.toUpperCase())
+      colors.brightGreen(fee.toUpperCase())
   }`;
 
   console.log(text);
@@ -85,7 +85,7 @@ export function randomAssetId() {
 }
 
 export function getDifficulty(
-  hash,
+    hash,
 ) {
   let leadingZeros = 0;
   let difficulty_number = 0;
@@ -116,9 +116,10 @@ export function getDifficulty(
 }
 
 export function incrementU8Array(
-  x,
+    x,
+    offset,
 ) {
-  for (let i = 0; i < x.length; i++) {
+  for (let i = offset; i < 16 + offset; i++) {
     if (x[i] === 255) {
       x[i] = 0;
     } else {
@@ -129,7 +130,7 @@ export function incrementU8Array(
 }
 
 export function halfDifficultyNumber(
-  a,
+    a,
 ) {
   const new_a = a.difficulty_number / 2n;
   if (new_a < 4096n) {
@@ -146,15 +147,15 @@ export function halfDifficultyNumber(
 }
 
 export function getDifficultyAdjustement(
-  total_epoch_time,
-  epoch_target,
+    total_epoch_time,
+    epoch_target,
 ) {
   if (
-    epoch_target / total_epoch_time >= 4 && epoch_target % total_epoch_time > 0
+      epoch_target / total_epoch_time >= 4 && epoch_target % total_epoch_time > 0
   ) {
     return { numerator: 1n, denominator: 4n };
   } else if (
-    total_epoch_time / epoch_target >= 4 && total_epoch_time % epoch_target > 0
+      total_epoch_time / epoch_target >= 4 && total_epoch_time % epoch_target > 0
   ) {
     return { numerator: 4n, denominator: 1n };
   } else {
@@ -163,12 +164,12 @@ export function getDifficultyAdjustement(
 }
 
 export function calculateDifficultyNumber(
-  a,
-  numerator,
-  denominator,
+    a,
+    numerator,
+    denominator,
 ) {
   const new_padded_difficulty = a.difficulty_number * 16n * numerator /
-    denominator;
+      denominator;
 
   const new_difficulty = new_padded_difficulty / 16n;
 
@@ -199,10 +200,10 @@ export function calculateDifficultyNumber(
 }
 
 export function calculateInterlink(
-  currentHash,
-  a,
-  b,
-  currentInterlink,
+    currentHash,
+    a,
+    b,
+    currentInterlink,
 ) {
   let b_half = halfDifficultyNumber(b);
 
@@ -211,10 +212,10 @@ export function calculateInterlink(
   let currentIndex = 0;
 
   while (
-    b_half.leadingZeros < a.leadingZeros ||
-    b_half.leadingZeros == a.leadingZeros &&
+      b_half.leadingZeros < a.leadingZeros ||
+      b_half.leadingZeros == a.leadingZeros &&
       b_half.difficulty_number > a.difficulty_number
-  ) {
+      ) {
     if (currentIndex < interlink.length) {
       interlink[currentIndex] = currentHash;
     } else {
@@ -230,8 +231,12 @@ export function calculateInterlink(
 
 export async function readFile(filename) {
   try {
-    return await fs.readFile(filename, 'utf8');
+    return await fs.readFile(filename, "utf8");
   } catch (err) {
-    console.error('Error reading the file:', err);
+    console.error("Error reading the file:", err);
   }
+}
+
+export function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
