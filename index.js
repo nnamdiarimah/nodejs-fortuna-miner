@@ -5,9 +5,9 @@ import dotenv from "dotenv";
 import {
     calculateDifficultyNumber,
     calculateInterlink,
-    getDifficultyAdjustement,
     delay,
-    getDifficulty
+    getDifficulty,
+    getDifficultyAdjustement
 } from "./utils.js";
 import os from "os";
 
@@ -26,9 +26,6 @@ dotenv.config();
             genesisFile,
         );
 
-    console.log("Starting");
-
-    console.log(validatorAddress)
 
     const provider = new Kupmios(kupoUrl, ogmiosUrl);
     const lucid = await Lucid.new(provider, isPreview ? "Preview" : "Mainnet");
@@ -45,6 +42,9 @@ dotenv.config();
 
     let minerState
 
+    console.log("Miner starting:".green)
+
+
     const validatorUTXOs = await lucid.utxosAt(validatorAddress);
     let validatorOutRef = validatorUTXOs.find(
         (u) => u.assets[validatorHash + fromText("lord tuna")],
@@ -52,10 +52,6 @@ dotenv.config();
 
     let validatorState = validatorOutRef.datum;
     minerState = Data.from(validatorState);
-
-    workers.forEach((worker, index) => {
-        worker.on("message", handleMessage.bind(this));
-    });
 
     let timer = 0;
     while (true) {
@@ -73,7 +69,7 @@ dotenv.config();
                     minerState = Data.from(validatorState);
 
                     // console.log("New block found, updating workers...")
-                    refreshWorkerState();
+                    await refreshWorkerState();
                 }
             } catch (e) {
                 console.log(e);
@@ -85,45 +81,39 @@ dotenv.config();
         }
     }
 
-    function refreshWorkerState() {
-        workers.forEach((worker, index) => {
-            const nonce = new Uint8Array(16); // todo move to worker
-            crypto.getRandomValues(nonce);
+    async function refreshWorkerState() {
+        const promises = workers.map((worker, index) => {
+            return new Promise((resolve, reject) => {
+                worker.on('message', (e) => {
+                    handleMessage(e);
+                    if(e.type === "acknowledge") {
+                        resolve();
+                    }
+                });
 
-            const targetState = new Constr(0, [
-                // nonce: ByteArray
-                toHex(nonce),
-                // block_number: Int
-                minerState.fields[0],
-                // current_hash: ByteArray
-                minerState.fields[1],
-                // leading_zeros: Int
-                minerState.fields[2],
-                // difficulty_number: Int
-                minerState.fields[3],
-                //epoch_time: Int
-                minerState.fields[4],
-            ]);
-
-            worker.postMessage({
-                workerId: index + 1,
-                validatorHash,
-                validatorAddress,
-                ogmiosUrl,
-                kupoUrl,
-                targetState,
-                nonce,
-                state: minerState,
-                validatorOutRef,
-            });
+            worker.onerror = (error) => {
+                reject(error);
+            };
+                worker.postMessage({
+                    workerId: index + 1,
+                    validatorHash,
+                    validatorAddress,
+                    ogmiosUrl,
+                    kupoUrl,
+                    state: minerState,
+                    validatorOutRef,
+                });
+            })
         });
+
+        await Promise.all(promises)
     }
 
-    async function handleMessage(message) {
+    function handleMessage(message) {
         switch (message.type) {
             case "foundNextDatum":
                 console.log("foundNextDatum");
-                await handleDatumFound();
+                handleDatumFound().then(a => console.log(a));
                 break;
             case "info":
                 console.log(message.data);

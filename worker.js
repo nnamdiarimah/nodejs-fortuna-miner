@@ -16,19 +16,34 @@ await waitForData();
 
 let {
     state,
-    targetState,
-    nonce,
 } = data;
 let targetHash;
 let difficulty;
 
+const nonce = new Uint8Array(16);
+crypto.getRandomValues(nonce);
+
+const targetState = new Constr(0, [
+    // nonce: ByteArray
+    toHex(nonce),
+    // block_number: Int
+    state.fields[0],
+    // current_hash: ByteArray
+    state.fields[1],
+    // leading_zeros: Int
+    state.fields[2],
+    // difficulty_number: Int
+    state.fields[3],
+    //epoch_time: Int
+    state.fields[4],
+]);
+
 let timer = new Date().valueOf();
 let hexTargetState = Data.to(targetState);
-let iterations = 0;
+
 while(true) {
     if (new Date().valueOf() - timer > 5000) {
         await delay(100)
-        iterations = 0;
     }
 
     targetHash = sha256(sha256(fromHex(hexTargetState)));
@@ -46,6 +61,7 @@ while(true) {
 
     incrementU8Array(nonce);
     hexTargetState = replaceMiddle(hexTargetState, 8, 40, toHex(nonce)); // todo modify the Uint8Array directly instead of converting to hex
+
 }
 
 function log(message) {
@@ -72,10 +88,8 @@ function foundNextDatum(hexState, nonce) {
 }
 
 function refreshData(e) {
-    // log("State updated");
     data = e;
-    data.targetState = rehydrateConstr(data.targetState);
-    // console.log('recieved data', data)
+    acknowledge();
 }
 
 async function waitForData() {
@@ -97,4 +111,8 @@ function rehydrateConstr(constr) {
 
 function replaceMiddle(original, start, end, replacement) {
     return original.substring(0, start) + replacement + original.substring(end);
+}
+
+function acknowledge() {
+    parentPort.postMessage({type: "acknowledge"});
 }
