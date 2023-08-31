@@ -31,7 +31,7 @@ dotenv.config();
 
     lucid.selectWalletFromSeed(await readFile("seed.txt"));
 
-    const cpuCoreCount = os.cpus().length;
+    const cpuCoreCount = os.cpus().length - 2;
     let workers = [];
     for (let i = 0; i < cpuCoreCount; i++) {
         workers.push(
