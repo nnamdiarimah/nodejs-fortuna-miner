@@ -35,7 +35,7 @@ dotenv.config();
 
     lucid.selectWalletFromSeed(await readFile("seed.txt"));
 
-    const cpuCoreCount = 1; // os.cpus().length - 2;
+    const cpuCoreCount = os.cpus().length;
     let workers = [];
     for (let i = 0; i < cpuCoreCount; i++) {
         workers.push(
@@ -53,19 +53,16 @@ dotenv.config();
     let validatorState = validatorOutRef.datum;
     minerState = Data.from(validatorState);
 
-    let targetState;
-
     workers.forEach((worker, index) => {
         worker.on("message", handleMessage.bind(this));
     });
 
-    let timer = new Date().valueOf();
+    let timer = 0;
     while (true) {
         // Main loop
-        if (new Date().valueOf() - timer > 5000) {
+        if (new Date().valueOf() - timer > 5000 || timer === 0) {
             timer = new Date().valueOf();
             try {
-                console.log("New block not found in 5 seconds, checking for new state");
                 const newValidatorUTXOs = await lucid.utxosAt(validatorAddress);
                 const newValidatorOutRef = newValidatorUTXOs.find(
                     (u) => u.assets[validatorHash + fromText("lord tuna")],
@@ -75,7 +72,7 @@ dotenv.config();
                     validatorState = newValidatorOutRef.datum;
                     minerState = Data.from(validatorState);
 
-                    console.log("New block found, updating worker state")
+                    // console.log("New block found, updating workers...")
                     refreshWorkerState();
                 }
             } catch (e) {
@@ -83,17 +80,17 @@ dotenv.config();
                 console.log(
                     "Error occurred while fetching utxos, skipping...".yellow,
                 );
-                await delay(1000);
+                continue
             }
         }
     }
 
     function refreshWorkerState() {
         workers.forEach((worker, index) => {
-            const nonce = new Uint8Array(16);
+            const nonce = new Uint8Array(16); // todo move to worker
             crypto.getRandomValues(nonce);
 
-            targetState = new Constr(0, [
+            const targetState = new Constr(0, [
                 // nonce: ByteArray
                 toHex(nonce),
                 // block_number: Int
@@ -107,10 +104,6 @@ dotenv.config();
                 //epoch_time: Int
                 minerState.fields[4],
             ]);
-
-            // console.log("Sending new state to worker ", targetState);
-
-            // targetState = Data.to(targetState);
 
             worker.postMessage({
                 workerId: index + 1,
@@ -137,12 +130,11 @@ dotenv.config();
         }
     }
 
-    async function handleDatumFound(targetState) {
-        const targetHash = sha256(sha256(fromHex(Data.to(targetState))));
+    async function handleDatumFound(hexTargetState, nonce) { // (hex, Uint8Array)
+        const targetHash = sha256(sha256(fromHex(hexTargetState)));
 
         const difficulty = getDifficulty(targetHash);
 
-        const nonce = targetState.fields[0];
         // calculate difficulty
         const realTimeNow = Number((Date.now() / 1000).toFixed(0)) * 1000 - 60000;
 

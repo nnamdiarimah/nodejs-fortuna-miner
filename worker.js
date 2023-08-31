@@ -23,19 +23,15 @@ let targetHash;
 let difficulty;
 
 let timer = new Date().valueOf();
-let cborTargetState = Data.to(targetState);
+let hexTargetState = Data.to(targetState);
 let iterations = 0;
 while(true) {
     if (new Date().valueOf() - timer > 5000) {
-        console.log('iterations', iterations)
         await delay(100)
-        timer = new Date().valueOf();
         iterations = 0;
-
     }
 
-    // targetHash = sha256(sha256(fromHex(Data.to(targetState)))); // todo
-    targetHash = sha256(sha256(fromHex(cborTargetState))); // todo
+    targetHash = sha256(sha256(fromHex(hexTargetState)));
     difficulty = getDifficulty(targetHash);
     const { leadingZeros, difficulty_number } = difficulty;
 
@@ -45,46 +41,38 @@ while(true) {
             difficulty_number < (state.fields[3]))
     ) {
         logWarning("Found next datum");
-        foundNextDatum();
+        foundNextDatum(hexTargetState, nonce);
     }
-    // console.log('before increment', targetState)
-    // const beforeCbor = Data.to(targetState);
-    // else failed to find the right datum
-    incrementU8Array(nonce); // todo increment directly on targetState buffer
-    // targetState.fields[0] = toHex(nonce);
-    // console.log('after increment', targetState)
-    // const afterCbor = Data.to(targetState);
-    // console.log('beforeCbor', beforeCbor)
-    // console.log('afterCbor', afterCbor)
-    // new solution
-    // break;
-    //
-    cborTargetState = replaceMiddle(cborTargetState, 8, 40, toHex(nonce));
-    // console.log('cborTargetState', cborTargetState)
-    // await delay(1000)
-    iterations++;
+
+    incrementU8Array(nonce);
+    hexTargetState = replaceMiddle(hexTargetState, 8, 40, toHex(nonce)); // todo modify the Uint8Array directly instead of converting to hex
 }
 
 function log(message) {
     const prefix = data?.workerId ? `Worker ${data.workerId}: ` : "";
     parentPort.postMessage({type: "info", data: prefix + message});
 }
-//
+
 function logWarning(message) {
     const prefix = data?.workerId ? `Worker ${data.workerId}: ` : "";
     parentPort.postMessage({type: "info", data: (prefix + message).yellow});
+}
+
+function logSuccess(message) {
+    const prefix = data?.workerId ? `Worker ${data.workerId}: ` : "";
+    parentPort.postMessage({type: "info", data: (prefix + message).green});
 }
 function logError(message) {
     const prefix = data?.workerId ? `Worker ${data.workerId}: ` : "";
     parentPort.postMessage({type: "info", data: (prefix + message).red});
 }
 
-function foundNextDatum() {
-    parentPort.postMessage({type: "foundNextDatum", data: targetState});
+function foundNextDatum(hexState, nonce) {
+    parentPort.postMessage({type: "foundNextDatum", data: { state, nonce }});
 }
 
 function refreshData(e) {
-    log("State updated");
+    // log("State updated");
     data = e;
     data.targetState = rehydrateConstr(data.targetState);
     // console.log('recieved data', data)
@@ -95,7 +83,7 @@ async function waitForData() {
 
     while(true) {
         if (data) {
-            parentPort.postMessage("Starting".green);
+            logSuccess("Received state, mining..");
             return;
         }
 
