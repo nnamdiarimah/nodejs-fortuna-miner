@@ -5,10 +5,11 @@ import {
     calculateInterlink,
     getDifficulty,
     getDifficultyAdjustement,
-    incrementU8Array, readFile
+    incrementU8Array, readFile, replaceMiddle
 } from "./utils.js";
 import {promises as fs} from "fs";
 import 'colors';
+import {getNextHashV3} from "./hashing.js";
 
 parentPort.on('message', async function (e) {
     const {validatorHash, validatorAddress, kupoUrl, ogmiosUrl} = e;
@@ -36,7 +37,7 @@ parentPort.on('message', async function (e) {
 
         crypto.getRandomValues(nonce);
 
-        let targetState = new Constr(0, [
+        let _targetState = new Constr(0, [
             // nonce: ByteArray
             toHex(nonce),
             // block_number: Int
@@ -51,15 +52,19 @@ parentPort.on('message', async function (e) {
             state.fields[4],
         ]);
 
+        let _hexTargetState = Data.to(_targetState);
+        let uint8TargetState = fromHex(_hexTargetState);
+
+
         let targetHash;
         let difficulty;
 
         parentPort.postMessage("Mining...");
         let timer = new Date().valueOf();
 
+        let iterations = 0;
         while (true) {
-            if (new Date().valueOf() - timer > 5000) {
-                parentPort.postMessage("New block not found in 5 seconds, updating state");
+            if (Date.now() - timer > 5000) {
                 timer = new Date().valueOf();
                 try {
                     validatorUTXOs = await lucid.utxosAt(validatorAddress);
@@ -74,15 +79,16 @@ parentPort.on('message', async function (e) {
                 );
 
                 if (validatorState !== validatorOutRef.datum) {
+                    parentPort.postMessage("New block, updating state");
+
                     validatorState = validatorOutRef.datum;
 
                     state = Data.from(validatorState);
 
                     nonce = new Uint8Array(16);
-
                     crypto.getRandomValues(nonce);
 
-                    targetState = new Constr(0, [
+                    _targetState = new Constr(0, [
                         // nonce: ByteArray
                         toHex(nonce),
                         // block_number: Int
@@ -96,11 +102,15 @@ parentPort.on('message', async function (e) {
                         //epoch_time: Int
                         state.fields[4],
                     ]);
+                    _hexTargetState = Data.to(_targetState);
+                    uint8TargetState = fromHex(_hexTargetState);
                 }
+                console.log('iterations', iterations);
+                iterations = 0;
             }
 
-            targetHash = sha256(sha256(fromHex(Data.to(targetState))));
-
+            incrementU8Array(nonce);
+            targetHash = getNextHashV3(uint8TargetState, nonce); // this mutates uint8TargetState with the new nonce
             difficulty = getDifficulty(targetHash);
 
             const {leadingZeros, difficulty_number} = difficulty;
@@ -112,10 +122,7 @@ parentPort.on('message', async function (e) {
             ) {
                 break;
             }
-            // parentPort.postMessage("failed to find the right datum");
-            incrementU8Array(nonce);
-
-            targetState.fields[0] = toHex(nonce);
+            iterations++;
         }
 
         const realTimeNow = Number((Date.now() / 1000).toFixed(0)) * 1000 - 60000;

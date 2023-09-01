@@ -235,3 +235,8 @@ export async function readFile(filename) {
     console.error('Error reading the file:', err);
   }
 }
+
+
+export function replaceMiddle(original, start, end, replacement) {
+  return original.substring(0, start) + replacement + original.substring(end);
+}

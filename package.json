@@ -18,5 +18,8 @@
     "colors": "^1.4.0",
     "dotenv": "^16.3.1",
     "lucid-cardano": "^0.10.7"
+  },
+  "devDependencies": {
+    "jasmine": "^5.1.0"
   }
 }
