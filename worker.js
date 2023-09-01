@@ -1,13 +1,13 @@
 import {parentPort} from 'worker_threads'
-import {Constr, Data, fromHex, fromText, Kupmios, Lucid, sha256, toHex} from "lucid-cardano";
+import {Constr, Data, fromHex, fromText, Kupmios, Lucid, toHex} from "lucid-cardano";
 import {
     calculateDifficultyNumber,
     calculateInterlink,
     getDifficulty,
     getDifficultyAdjustement,
-    incrementU8Array, readFile, replaceMiddle
+    incrementU8Array,
+    readFile
 } from "./utils.js";
-import {promises as fs} from "fs";
 import 'colors';
 import {getNextHashV3} from "./hashing.js";
 
@@ -62,7 +62,6 @@ parentPort.on('message', async function (e) {
         parentPort.postMessage("Mining...");
         let timer = new Date().valueOf();
 
-        let iterations = 0;
         while (true) {
             if (Date.now() - timer > 5000) {
                 timer = new Date().valueOf();
@@ -105,8 +104,6 @@ parentPort.on('message', async function (e) {
                     _hexTargetState = Data.to(_targetState);
                     uint8TargetState = fromHex(_hexTargetState);
                 }
-                console.log('iterations', iterations);
-                iterations = 0;
             }
 
             incrementU8Array(nonce);
@@ -122,7 +119,6 @@ parentPort.on('message', async function (e) {
             ) {
                 break;
             }
-            iterations++;
         }
 
         const realTimeNow = Number((Date.now() / 1000).toFixed(0)) * 1000 - 60000;

@@ -1,6 +1,6 @@
 import {Constr, toHex, Data, fromHex} from "lucid-cardano"
-import {getNextHashOriginal, getNextHashV2, getNextHashV3} from "../../hashing.js";
-import {incrementU8Array} from "../../utils.js";
+import {getNextHashOriginal, getNextHashV2, getNextHashV3} from "../hashing.js";
+import {incrementU8Array} from "../utils.js";
 
 describe('Miner', function () {
     let state;
